@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lsh-agent-memory"
+version = "0.1.0"
+description = "High-throughput episodic memory for local CPU LLMs via data-dependent LSH (ITQ) and POPCNT scan"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+authors = [
+    { name = "Genesis410" }
+]
+keywords = [
+    "llm",
+    "episodic-memory",
+    "locality-sensitive-hashing",
+    "lsh",
+    "vector-search",
+    "cpu",
+    "itq",
+    "llama-cpp",
+    "langchain"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy>=1.24.0",
+    "scipy>=1.10.0",
+]
+
+[project.optional-dependencies]
+langchain = [
+    "langchain-core>=0.1.0",
+]
+llama-cpp = [
+    "llama-cpp-python>=0.2.0",
+]
+dev = [
+    "pytest>=7.0.0",
+]
+all = [
+    "langchain-core>=0.1.0",
+    "llama-cpp-python>=0.2.0",
+    "pytest>=7.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/Genesis410/lsh-agent-memory"
+Repository = "https://github.com/Genesis410/lsh-agent-memory"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["lsh_agent_memory*"]
+exclude = ["benchmarks*", "build_native*", "data*", "docs*", "scripts*", "tests*"]

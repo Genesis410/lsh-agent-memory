@@ -1,0 +1,9 @@
+"""Setup script for lsh-agent-memory."""
+
+from setuptools import setup, find_packages
+
+setup(
+    name="lsh-agent-memory",
+    version="0.1.0",
+    packages=find_packages(include=["lsh_agent_memory*"]),
+)

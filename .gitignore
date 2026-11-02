@@ -17,7 +17,6 @@ dist/
 # Virtual environments
 .venv/
 .venv_bench/
-.riset/.venv_bench/
 env/
 venv/
 ENV/
@@ -33,16 +32,25 @@ ehthumbs.db
 Desktop.ini
 .DS_Store
 
-# Temporary scratch files
+# Temporary scratch & storage files
 *.tmp
 *.log
+*.bin
 temp_test_*.json
+mem_store/
+quickstart_store/
+langchain_store/
+llamacpp_store/
+bench_demo_store/
 
 # Large synthetic benchmark data matrices (>100MB exceeds GitHub push limits)
-# Regenerable via scripts/generate_datasets.py
 data/benchmarks/*.npy
 data/benchmarks/*.dat
-.riset/data/benchmarks/*.npy
-.riset/data/benchmarks/*.dat
-!.riset/data/benchmarks/queries_1000.npy
-!.riset/data/benchmarks/gt_top10_*.npy
+
+# ==============================================================================
+# PRIVATE RESEARCH REPOSITORY - NEVER COMMIT OR PUSH TO GITHUB
+# ==============================================================================
+.riset/
+.riset/**
+.superpowers/
+.remember/
