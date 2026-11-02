@@ -17,6 +17,35 @@ Local small language models (such as Phi-3, Mistral, and Llama-3 8B) running on 
 
 ---
 
+## When to Use (and When Not to Use)
+
+### Best Use Scenarios (Sweet Spots)
+
+1. **Local Edge AI & Resource-Constrained Devices (Laptops, Mini PCs, Intel NUCs)**:
+   - When running local quantized LLMs (Llama-3 8B, Phi-3, Mistral) via Llama.cpp or Ollama on machines with 8 GB–16 GB RAM.
+   - Traditional VectorDBs (Milvus, Qdrant in Docker, or in-memory HNSW) consume 1.5 GB–4 GB of RAM solely for index graphs. `lsh-agent-memory` uses only **15.26 MB RAM for 1,000,000 interactions**, leaving 99% of system memory free for model weights and KV-cache.
+2. **Episodic Conversational Memory (Multi-Day / Multi-Turn Dialogues)**:
+   - When an AI agent needs to retain personal preferences, facts, and past instructions across hundreds of thousands of conversational turns.
+   - Built-in temporal decay scoring ($S = \alpha \cdot \cos + (1-\alpha) \cdot 2^{-\Delta t / h}$) automatically prioritizes recent interactions (**99.33% Needle Hit@10 for $\Delta t \le 200$**) while letting obsolete context gracefully decay, preventing context-window clutter.
+3. **Air-Gapped, Privacy-Compliant & On-Premise Deployments**:
+   - Ideal for legal, medical, or enterprise assistants adhering to strict data sovereignty regulations (e.g., Indonesia UU No. 27/2022 PDP, GDPR, HIPAA) where chat history cannot leave the local machine to third-party cloud VectorDBs (Pinecone, Weaviate Cloud).
+   - Runs 100% in-process as an embedded Python library; data stays in local encrypted `.dat`/`.npy` files.
+4. **Zero-DevOps Microservice & Script Integration**:
+   - Requires no Docker daemon, no background service daemon, and no C++ compiler toolchain. Standard `pip install lsh-agent-memory` runs out of the box with pure NumPy and SciPy.
+
+---
+
+### When NOT to Use (Fair Trade-offs)
+
+- **Massive Distributed Multi-Tenant Clouds (> 100 Million Vectors)**:
+  - If you require distributed sharding across multi-node server clusters, choose enterprise vector search engines like Milvus or Qdrant.
+- **Sub-Millisecond High-QPS Server Clusters with Abundant RAM**:
+  - If you operate a dedicated cloud server with 256 GB RAM and GPU acceleration, in-memory HNSW achieves ~0.5 ms query latency. `lsh-agent-memory` trades sub-millisecond graph speed for an **order-of-magnitude memory reduction (15.26 MB vs 1.54 GB) at ~23 ms CPU latency**.
+- **Static Document Search Without Temporal Dynamics**:
+  - If you only search static document chunks (e.g., an unversioned 500-page PDF manual) where timestamps and recency decay are irrelevant, standard BM25 or flat cosine search may suffice.
+
+---
+
 ## Key Features
 
 1. **16 Bytes / Vector Bitcode Footprint**:
