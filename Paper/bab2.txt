@@ -1,0 +1,229 @@
+BAB 2. TINJAUAN PUSTAKA
+
+2.1 Landasan Teori
+
+2.1.1 Memori Jangka Panjang Agen AI dan Keterbatasan Context Window LLM Lokal
+
+Perkembangan agen cerdas otonom (agentic AI) mentransformasikan interaksi manusia-komputer dari sistem tanya-jawab reaktif menjadi entitas kolaboratif yang menjalankan peran pendamping personal, asisten produktivitas, maupun eksekutor alur kerja multi-tahap [1], [3]. Dalam arsitektur kognitif agen, memori jangka panjang (long-term memory) memegang peranan krusial dalam mempertahankan kontinuitas identitas, preferensi personal pengguna, dan status tugas lintas sesi percakapan [2]. Secara psikologis dan komputasional, memori agen umumnya diklasifikasikan ke dalam working memory (konteks aktif dalam prompt saat ini), semantic memory (pengetahuan faktual umum), dan episodic memory (rekaman sekuensial peristiwa, percakapan masa lalu, dan pengalaman interaksi temporal) [1], [2].
+
+Pada model bahasa besar (LLM) lokal berukuran ringkas seperti Phi-3 [4] maupun Llama-3 8B terkuantisasi [5] yang dieksekusi pada Central Processing Unit (CPU) komputer meja atau laptop, retensi memori jangka panjang mengalami hambatan fisik yang berat akibat keterbatasan context window. Arsitektur dasar Transformer beroperasi dengan mekanisme self-attention penuh yang membutuhkan komputasi berorde O(S^2), di mana S adalah panjang sekuens token. Pada tahap inferensi autoregresif (decoding), model menyimpan representasi aktivasi kunci dan nilai dalam Key-Value Cache (KV-Cache) agar tidak menghitung ulang token masa lalu [7]. Kebutuhan memori fisik untuk KV-Cache dirumuskan secara analitis sebagai:
+
+M_KV = 2 × B × S × L × H_KV × D × P
+
+di mana B merepresentasikan batch size (B=1 pada inferensi lokal pengguna tunggal), S adalah panjang sekuens total, L adalah jumlah lapisan Transformer, H_KV adalah jumlah kepala attention khusus key-value (menggunakan Grouped-Query Attention/GQA), D adalah dimensi per kepala attention, dan P adalah presisi bita tipe data (P=2 untuk FP16/BF16) [7]. Pada model Llama-3 8B (L=32, H_KV=8, D=128, P=2), kebutuhan KV-Cache mencapai 1,07 GB RAM pada S=8.192 token, melonjak menjadi 4,29 GB pada S=32.768 token, dan mencapai 16,78 GB pada jendela 128.000 token [7]. Di perangkat komputasi personal dengan RAM 16 GB DDR4 (bandwidth memori 35–45 GB/s), membaca seluruh matriks KV-Cache sebesar belasan gigabita untuk setiap token baru yang digenerasi menyebabkan degradasi kecepatan inferensi drastis (< 1–2 token/detik). Akibatnya, sistem terpaksa memotong (truncate) riwayat percakapan lama, yang memicu fenomena amnesia episodik [1], [6].
+
+Lebih jauh, temuan empiris Liu dkk. (2024) mengenai fenomena Lost in the Middle [6] menegaskan bahwa memperbesar jendela konteks secara naif tidak menyelesaikan permasalahan retrieval informasi. Model bahasa terbukti memiliki bias posisi berbentuk kurva U, di mana performa ekstraksi fakta sangat tinggi jika informasi berada di awal (primacy effect) atau di akhir (recency effect) prompt, namun anjlok drastis ketika fakta berada di tengah-tengah rentang konteks panjang [6]. Kenyataan ini menuntut hadirnya mekanisme penarikan konteks selektif dari basis memori eksternal yang ringkas.
+
+2.1.2 Konsep Embedding Kalimat dan Cosine Similarity
+
+Untuk memungkinkan temu balik semantik atas memori percakapan masa lalu, teks percakapan harus ditransformasikan ke dalam representasi vektor kontinu dense pada ruang berdimensi d (x ∈ R^d). Model sentence embedding modern seperti Sentence-BERT [17] dan MiniLM [16] memanfaatkan arsitektur jaringan siam (siamese) atau triplet yang dilatih untuk memetakan kalimat-kalimat yang memiliki kesamaan semantik ke koordinat yang berdekatan dalam ruang vektor euklidian.
+
+MiniLM (Wang dkk., 2020) mengaplikasikan distilasi self-attention mendalam (deep self-attention distillation) dari model guru berukuran besar ke model siswa yang ringkas, mentransfer relasi nilai dot-product perhatian dan matriks kemiripan antar token [16]. Hasilnya, varian seperti all-MiniLM-L6-v2 menghasilkan vektor berdimensi d=384 dengan bobot model kurang dari 90 MB dan memori kerja < 300 MB, menjadikannya standar representasi kalimat paling efisien di lingkungan CPU [16]. Tingkat kemiripan semantik antara vektor query q dan vektor memori m diukur menggunakan metrik kemiripan kosinus (cosine similarity):
+
+cos(q, m) = (q · m) / (||q||_2 × ||m||_2) = (∑_{i=1}^d q_i m_i) / (√(∑_{i=1}^d q_i^2) × √(∑_{i=1}^d m_i^2))
+
+Apabila seluruh vektor embedding dinormalisasi terhadap norma L2 (||v||_2 = 1), perhitungan kemiripan kosinus tereduksi secara elegan menjadi operasi perkalian dot product matriks: cos(q, m) = q^T m. Hal ini sangat menguntungkan secara komputasi pada CPU x86-64 karena dapat dihitung melalui operasi Basic Linear Algebra Subprograms (BLAS) level 3 yang terparalelisasi penuh.
+
+2.1.3 Approximate Nearest Neighbor (ANN) dan Kutukan Dimensi (Curse of Dimensionality)
+
+Pencarian tetangga terdekat eksak (Exact Nearest Neighbor Search) atas basis data berisi N vektor memerlukan komparasi dot product penuh terhadap seluruh entri dengan kompleksitas waktu O(N × d). Meskipun terjangkau pada skala kecil (N ≤ 10.000), pendekatan ini menimbulkan latensi yang tidak dapat ditoleransi saat memori agen bertumbuh mencapai ratusan ribu hingga jutaan catatan interaksi [15].
+
+Pada ruang berdimensi tinggi (d ≥ 100), metode partisi spasial konvensional seperti k-d tree, R-tree, atau Ball tree mengalami degradasi total menjadi pemindaian linier akibat fenomena kutukan dimensi (curse of dimensionality) [15]. Secara matematis, seiring bertambahnya dimensi d menuju tak hingga, selisih antara jarak terjauh (dist_max) dan jarak terdekat (dist_min) dari suatu titik query terhadap sekumpulan titik acak memudar menuju nol relatif terhadap jarak minimumnya:
+
+lim_{d → ∞} (dist_max - dist_min) / dist_min = 0
+
+Fenomena ini menyebabkan hampir seluruh titik data berada pada jarak yang nyaris ekuidistan dari titik query, sehingga partisi hiper-kotak (hyper-rectangle) gagal memangkas ruang pencarian [15]. Untuk mengatasi batas teoritis ini, paradigma Approximate Nearest Neighbor (ANN) melonggarkan jaminan pencarian eksak dengan menukar sejumlah kecil akurasi (recall) demi memperoleh kecepatan temu balik sub-linier O(log N) atau O(1) [8], [15].
+
+2.1.4 Locality-Sensitive Hashing (LSH)
+
+Locality-Sensitive Hashing (LSH) merupakan salah satu pilar algoritma ANN fundamental yang menyediakan jaminan matematis sub-linier tanpa memerlukan struktur graf yang masif [10], [14]. Konsep dasar LSH bertumpu pada perancangan keluarga fungsi hash H sedemikian rupa sehingga probabilitas tabrakan (collision) antara dua vektor berbanding lurus dengan tingkat kemiripannya [10], [14]. Secara formal, keluarga fungsi hash H disebut (d_1, d_2, p_1, p_2)-sensitive terhadap metrik jarak D jika untuk setiap pasang titik u, v ∈ R^d berlaku:
+1. Jika D(u, v) ≤ d_1, maka Pr_{h ∈ H}[h(u) = h(v)] ≥ p_1
+2. Jika D(u, v) ≥ d_2, maka Pr_{h ∈ H}[h(u) = h(v)] ≤ p_2
+dengan syarat d_1 < d_2 dan p_1 > p_2 [10], [14].
+
+Untuk metrik kemiripan sudut kosinus, Charikar (2002) memperkenalkan skema proyeksi bidang batas acak (Random Hyperplane Projection atau SimHash) [20]. Diberikan vektor proyeksi acak r ∈ R^d yang disampel dari distribusi Gaussian baku multivariat N(0, I_d), fungsi hash biner didefinisikan berdasarkan tanda dot product (sign):
+
+h_r(x) = 1 jika r^T x ≥ 0; h_r(x) = 0 jika r^T x < 0
+
+Probabilitas tabrakan bit biner dari dua vektor u dan v sama dengan fraksi ruang hiper-bola di mana bidang batas normal r tidak memisahkan kedua vektor tersebut. Persamaan probabilitas tabrakan dirumuskan secara eksak sebagai [20]:
+
+Pr[h_r(u) = h_r(v)] = 1 - (θ(u, v) / π)
+
+di mana θ(u, v) = arccos(cos(u, v)) merupakan sudut rotasi dalam radian antara vektor u dan v. Untuk memperkuat diskriminasi pencarian, LSH menggabungkan K fungsi hash acak independen untuk membentuk satu signature biner g(x) = (h_1(x), ..., h_K(x)), dan mendistribusikan data ke dalam L tabel hash independen. Probabilitas bahwa dua vektor u dan v bertabrakan pada setidaknya satu dari L tabel hash dirumuskan sebagai [10]:
+
+P_collision = 1 - (1 - p^K)^L
+
+di mana p = 1 - (θ / π). Peningkatan nilai K menekan tingkat false positive (meningkatkan presisi), sedangkan penambahan jumlah tabel L menekan false negative (meningkatkan recall) namun meningkatkan konsumsi memori secara proporsional [10], [14].
+
+2.1.5 Hashing Data-Dependent: Centering, PCA, dan ITQ
+
+Meskipun SimHash klasik memiliki keanggunan teoritis, kinerjanya merosot tajam ketika diterapkan pada representasi embedding kalimat modern. Hal ini disebabkan oleh fenomena degenerasi representasi teks atau anisotropi (representation degeneration problem / cone effect) [12]. Vektor-vektor embedding bahasa alami tidak tersebar seragam secara isotropik di seluruh permukaan bola satuan hiper-bola, melainkan mengumpul dalam sebuah kerucut sempit dengan korelasi tinggi antar-dimensi serta vektor rata-rata yang menyimpang jauh dari titik nol (μ ≠ 0) [12]. Akibatnya, proyeksi acak isotropik memotong ruang representasi secara tidak optimal: banyak bidang batas memotong ruang kosong tanpa membagi data, sementara bidang lainnya membelah data secara sangat timpang, memicu lonjakan bit redundancy dan galat kuantisasi biner yang masif [11], [18].
+
+Untuk mengatasi patologi anisotropi pada teks campuran bilingual, diperlukan pendekatan hashing data-dependent yang mengadaptasi orientasi bidang pemotong sesuai dengan struktur kovarians data riil [11], [18]. Metodologi ini terdiri dari tiga tahapan sistematis:
+1. Pemusatan Rata-Rata (Mean Centering):
+Matriks data X ∈ R^{N × d} ditransformasikan dengan mengurangkan vektor rata-rata empiris μ = (1/N) ∑_{i=1}^N x_i, menghasilkan data terpusat X_c = X - μ. Langkah ini memindahkan pusat massa distribusi anisotropik tepat ke titik asal koordinat.
+2. Reduksi Dimensi Principal Component Analysis (PCA):
+Dihitung matriks kovarians sampel C = (X_c^T X_c) / N ∈ R^{d × d}. Melalui dekomposisi nilai eigen C = V Λ V^T, diekstraksi c komponen utama teratas P = V_{:, -c:} ∈ R^{d × c} yang menangkap varians data terbesar, menghasilkan proyeksi awal Z = X_c P ∈ R^{N × c}.
+3. Iterative Quantization (ITQ):
+Gong dan Lazebnik (2013) membuktikan bahwa proyeksi PCA mentah masih menghasilkan galat kuantisasi tinggi karena verteks biner {-1, 1}^c tidak sejajar dengan sumbu-sumbu komponen utama [18]. ITQ merumuskan pencarian matriks rotasi ortogonal optimal R ∈ R^{c × c} yang meminimalkan galat aproksimasi Frobenius antara proyeksi kontinu terotasi Z R dan kode biner B ∈ {-1, 1}^{N × c}:
+
+min_{B, R} ||B - Z R||_F^2   dengan kendala   R^T R = I_c,  B ∈ {-1, 1}^{N × c}
+
+Solusi optimal dicapai secara iteratif melalui optimasi bergantian (alternating optimization). Pada setiap iterasi t: (a) Matriks biner diperbarui melalui B = sign(Z R); (b) Matriks rotasi diperbarui dengan menghitung Singular Value Decomposition (SVD) dari matriks B^T Z = U Σ V^T, dan menetapkan R = (U V^T)^T [18]. Matriks proyeksi akhir gabungan W = P R ∈ R^{d × c} memastikan setiap bit biner memiliki varians maksimal dan korelasi antar-bit mendekati nol [11], [18].
+
+2.1.6 Multi-probe LSH, Hamming Distance, dan Re-ranking
+
+Dalam skema hashing biner c-bit (misalnya c=64 atau c=128 bit), setiap representasi vektor dikonversi menjadi bitcode biner. Untuk efisiensi perangkat keras pada arsitektur x86-64, bitcode dipadatkan (bit-packing) menjadi array bertipe integer 64-bit tak bertanda (uint64), di mana kode 128-bit hanya membutuhkan w = 2 word per entri (16 bita). Jarak Hamming antara bitcode query b_q dan bitcode basis data b_i dihitung melalui operasi bitwise XOR yang diikuti instruksi hardware population count (popcount):
+
+D_H(b_q, b_i) = ∑_{j=1}^w popcount(b_{q, j} ⊕ b_{i, j})
+
+NumPy versi 2.0+ mengekspos instruksi native CPU ini secara langsung melalui fungsi ufunc np.bitwise_count, yang beroperasi pada register SIMD dan melepas Global Interpreter Lock (GIL) Python, memungkinkan pemindaian multi-thread penuh pada 12 thread Ryzen [11]. Untuk mengatasi boundary effect—kondisi di mana dua vektor tetangga dekat semantik terpisah oleh bidang pemotong biner tipis—diterapkan prinsip Multi-probe LSH, yakni memeriksa kandidat dengan jarak Hamming D_H ≤ r di sekitar kode query [10].
+
+Sistem menerapkan paradigma temu balik dua tahap (Two-Stage Retrieval):
+1. Tahap Penyaringan Hamming (Filter Stage): Memindai seluruh bitcode di RAM berorde O(N) dan melakukan seleksi sebagian (partial selection) menggunakan algoritma np.argpartition untuk menyaring N_pool kandidat teratas (misalnya N_pool = 250 hingga 500) dengan jarak Hamming terkecil.
+2. Tahap Pemeringkatan Ulang (Re-ranking Stage): Mengambil vektor mentah Float32 dari N_pool kandidat terpilih dari disk via np.memmap, kemudian menghitung exact cosine similarity dan mengurutkan k hasil teratas. Pendekatan ini membatasi komputasi floating-point berat hanya pada fraksi kecil data (≤ 0,05% pada 1 juta entri).
+
+2.1.7 Skor Memori Episodik: Relevansi Semantik dan Peluruhan Waktu Paruh (Half-Life)
+
+Sistem memori agen kognitif yang realistis tidak boleh hanya bertumpu pada kemiripan semantik statis. Memori episodik manusia secara alami menyeimbangkan antara relevansi topik dan aktualitas waktu (recency), sebagaimana diadaptasi dalam studi agen otonom Generative Agents [3] dan MemoryBank [2]. Dalam penelitian ini, skor akhir memori episodik dirumuskan sebagai kombinasi linier terbobot antara relevansi semantik dan fungsi peluruhan waktu paruh:
+
+Score(q, m) = α · cos(q, m) + (1 - α) · Decay(Δt)
+
+di mana α ∈ [0, 1] adalah hiperparameter bobot komparatif. Fungsi peluruhan waktu dirancang mengadopsi formulasi waktu paruh fisika (half-life):
+
+Decay(Δt) = exp(-λ · Δt) = 2^(-Δt / h),   di mana λ = ln(2) / h
+
+di mana Δt merepresentasikan selisih waktu atau jarak giliran dialog (turn distance) antara saat memori dicatat dan query saat ini, dan h adalah parameter waktu paruh (half-life). Keunggulan formulasi berbasis h terletak pada interpretabilitasnya yang intuitif: nilai aktualitas memori akan menyusut tepat sebesar 50% setelah h unit waktu berlalu (misalnya h=200 giliran atau h=7 hari). Peluruhan ini hanya diaplikasikan pada tahap pemeringkatan ulang (re-ranking) kandidat, sehingga fakta needle lampau yang memiliki kesamaan semantik sangat tinggi tidak tereliminasi secara prematur pada tahap penyaringan Hamming.
+
+2.1.8 Metrik Evaluasi Sistem Memori
+
+Untuk mengevaluasi kinerja sistem memori episodik secara objektif dan kuantitatif, digunakan empat dimensi metrik terstandarisasi [15]:
+1. Recall@k:
+Mengukur fraksi tetangga terdekat sejati (ground truth exact cosine G_k) yang berhasil masuk ke dalam himpunan hasil temu balik sistem R_k:
+
+Recall@k = |R_k ∩ G_k| / k
+
+2. Mean Reciprocal Rank (MRR):
+Mengevaluasi presisi urutan posisi dokumen atau memori target pertama yang relevan dalam daftar peringkat hasil temu balik:
+
+MRR = (1 / |Q|) ∑_{i=1}^{|Q|} (1 / rank_i)
+
+3. Persentil Latensi Query (p50 dan p95):
+Mengukur waktu respons sistem dalam milidetik (ms) untuk memproses query dari pengkodean biner hingga pemeringkatan akhir. Nilai p50 mencerminkan latensi tipikal (median), sedangkan p95 merepresentasikan jaminan performa batas atas pada kondisi beban ekor (tail latency).
+4. Konsumsi RAM Puncak (Peak Process Working Set):
+Mengukur pemakaian memori fisik riil (Resident Set Size/Working Set) proses Python pada sistem operasi Windows 11 menggunakan pustaka psutil, memastikan isolasi pengukuran dari file page cache sistem operasi.
+
+2.1.9 Design Science Research Methodology (DSRM)
+
+Penelitian perancangan artefak perangkat lunak ini berpedoman pada kerangka kerja Design Science Research Methodology (DSRM) yang dikembangkan oleh Peffers dkk. (2007) [19]. DSRM menyediakan pendekatan terstruktur berbasis pembuktian ilmiah untuk rekayasa artefak sistem informasi. Enam tahapan DSRM diintegrasikan ke dalam siklus penelitian ini:
+1. Identifikasi Masalah dan Motivasi: Menganalisis batasan context window model bahasa lokal pada CPU dan kelemahan Vector DB konvensional.
+2. Definisi Tujuan Solusi: Menetapkan sasaran kuantitatif terukur (waktu encode 50k < 2s, RAM < 2GB, Recall@10 ≥ 85%).
+3. Desain dan Pengembangan Artefak: Mengonstruksi modul arsitektural LSH-Memory-Wrapper (Hasher ITQ, BitIndex, MemmapStore, Scorer, Adapter).
+4. Demonstrasi Artefak: Mengintegrasikan pustaka pada eksekusi inferensi agen percakapan lokal berbasis Llama.cpp.
+5. Evaluasi Kinerja: Menguji efisiensi komputasi, konsumsi memori, ablasi parameter, dan akurasi temu balik needle-in-haystack.
+6. Komunikasi Hasil: Menyusun laporan riset akademik, dokumentasi teknis, dan mempublikasikan kode sumber terbuka.
+
+2.2 Studi Pustaka
+
+Sebagai landasan komparatif dan penegasan posisi penelitian terhadap perkembangan ilmu pengetahuan terkini, dilakukan sintesis komprehensif atas literatur bereputasi internasional terbitan tahun 2020 hingga 2026. Literatur dikelompokkan ke dalam empat pilar tematik utama: Penelitian LSH dan Kuantisasi Biner, Sistem ANN Modern, Model Embedding Teks Bahasa Campuran/Ringan, serta Sistem Memori Agen Cerdas.
+
+Tabel 2.1. Sintesis Perbandingan Literatur Terkait (2020–2026)
+
+Tabel 2.2. Matriks Kebaruan Fitur LSH-Memory-Wrapper terhadap Sistem Eksisting
+
+2.3 Kerangka Pikiran
+
+Kerangka pemikiran penelitian ini dibangun di atas hubungan kausal antara kendala komputasi fisik, solusi rekayasa perangkat lunak berbasis struktur data, dan pembuktian empiris. Alur kerangka pikiran terbagi menjadi tiga tahapan terintegrasi:
+1. MASALAH:
+Keterbatasan mendasar berakar pada amnesia kontekstual model bahasa lokal kecil (Phi-3, Llama-3 8B terkuantisasi) akibat sempitnya context window (M1); keterbatasan sumber daya RAM fisik pada perangkat laptop/desktop CPU (< 2 GB alokasi proses) serta tingginya overhead memori server VectorDB eksternal (M2); dan tantangan pemetaan representasi teks campuran Indonesia-Inggris yang mengalami degenerasi anisotropik pada ruang embedding (M3).
+2. SOLUSI TEKNOLOGI:
+Dikonstruksi modul LSH-Memory-Wrapper yang beroperasi secara sekuensial dari atas ke bawah: (a) Tahap 1: Ekstraksi kalimat ke dalam dense embedding MiniLM 384 dimensi bernorma satuan; (b) Tahap 2: Transformasi hashing data-dependent melalui pemusatan rata-rata (centering), reduksi kovarians PCA, dan iterasi rotasi ortogonal ITQ guna memitigasi galat kuantisasi pada teks bilingual; (c) Tahap 3: Penyimpanan bitcode biner padat uint64 di RAM yang dipindai secara cepat via operasi np.bitwise_count dan seleksi argpartition O(N) multi-thread; (d) Tahap 4: Penyimpanan vektor mentah di disk (np.memmap) dan pemeringkatan ulang menggabungkan exact cosine similarity dengan skor aktualitas waktu paruh (half-life decay); (e) Tahap 5: Injeksi konteks terformat ke prompt Llama.cpp di bawah batasan token budget tertentu serta penyediaan adapter LangChain VectorStore.
+3. EVALUASI DAN VALIDASI:
+Keberhasilan arsitektur divalidasi melalui tiga pilar pengujian: (a) E1: Pengukuran akurasi temu balik Recall@k dan MRR terhadap ground truth exact cosine brute-force serta ablasi ITQ vs Random LSH; (b) E2: Pengujian efisiensi komputasi mencakup waktu encode 50k entri (< 2s), latensi kueri p50 (< 10 ms), konsumsi working set RAM (< 2 GB), dan trade-off presisi disk Float32 vs Float16; (c) E3: Pengujian hilir (downstream QA) needle-in-haystack untuk membuktikan peningkatan akurasi penarikan fakta percakapan multi-sesi dari 0% menjadi 100% pada model bahasa lokal.
+
+Representasi alur logika kerangka pikiran tersebut dimodelkan dalam diagram alir Mermaid.js berikut:
+
+```mermaid
+flowchart LR
+    subgraph MASALAH ["1. MASALAH PENELITIAN"]
+        direction TB
+        M1["M1: Amnesia Episodik LLM Lokal<br/>(Context window terbatas pada CPU)"]
+        M2["M2: Keterbatasan Sumber Daya Edge<br/>(RAM < 2GB, VectorDB eksternal berat)"]
+        M3["M3: Degenerasi Teks Campuran ID-EN<br/>(Anisotropi ruang embedding)"]
+    end
+
+    subgraph SOLUSI ["2. SOLUSI TEKNOLOGI (LSH-MEMORY-WRAPPER)"]
+        direction TB
+        S1["Tahap 1: Ekstraksi Dense Embedding<br/>(MiniLM 384-D, L2 Norm)"]
+        S2["Tahap 2: Hashing Data-Dependent<br/>(Centering + PCA + ITQ)"]
+        S3["Tahap 3: Indeks Bitcode uint64 di RAM<br/>(Parallel Hamming Scan via bitwise_count)"]
+        S4["Tahap 4: Raw Store & Re-ranking Episodik<br/>(np.memmap + Cosine Exact + Half-Life Decay)"]
+        S5["Tahap 5: Prompt Context Injection<br/>(Llama.cpp & LangChain Adapter)"]
+        S1 --> S2 --> S3 --> S4 --> S5
+    end
+
+    subgraph EVALUASI ["3. EVALUASI DAN VALIDASI"]
+        direction TB
+        E1["E1: Akurasi Temu Balik Semantik<br/>(Recall@10 >= 85%, MRR, Ablasi ITQ)"]
+        E2["E2: Efisiensi Sumber Daya & Waktu<br/>(Encode < 2s, Latensi < 10ms, RAM < 2GB)"]
+        E3["E3: Evaluasi Downstream Needle QA<br/>(Akurasi Pemulihan Fakta 100%)"]
+    end
+
+    %% Hubungan Kausal Antar-Kolom
+    MASALAH ==>|"Menjawab Masalah"| SOLUSI
+    SOLUSI ==>|"Menguji Artefak"| EVALUASI
+
+    %% Pemetaan Spesifik (Mapping)
+    M3 -.->|"Mitigasi Anisotropi"| S2
+    S2 -.->|"Validasi Recall"| E1
+
+    M2 -.->|"Alokasi RAM Ringan"| S3
+    S4 -.->|"Validasi Benchmark"| E2
+
+    M1 -.->|"Restorasi Konteks"| S5
+    S5 -.->|"Validasi Downstream"| E3
+```
+
+Gambar 2.1. Diagram Kerangka Pikiran Penelitian LSH-Memory-Wrapper (Monokrom)
+
+Daftar Pustaka Sementara Bab 2
+
+[1] C. Packer, S. Wooders, K. Lin, V. Fang, S. G. Patil, I. Stoica, and J. E. Gonzalez, "MemGPT: Towards LLMs as operating systems," arXiv preprint arXiv:2310.08560, 2023.
+
+[2] W. Zhong, L. Guo, Q. Gao, H. Ye, and Y. Wang, "MemoryBank: Enhancing large language models with long-term memory," in Proc. AAAI Conf. Artif. Intell., vol. 38, no. 17, pp. 19729–19737, 2024.
+
+[3] J. S. Park, J. C. O'Brien, C. J. Cai, M. R. Morris, P. Liang, and M. S. Bernstein, "Generative agents: Interactive simulacra of human behavior," in Proc. 36th Annu. ACM Symp. User Interface Softw. Technol. (UIST), pp. 1–22, 2023.
+
+[4] M. Abdin et al., "Phi-3 technical report: A highly capable language model locally on your phone," arXiv preprint arXiv:2404.14219, 2024.
+
+[5] A. Dubey et al., "The Llama 3 herd of models," arXiv preprint arXiv:2407.21783, 2024.
+
+[6] N. F. Liu, K. Lin, J. Hewitt, A. Paranjape, M. Bevilacqua, F. Petroni, and P. Liang, "Lost in the middle: How language models use long contexts," Trans. Assoc. Comput. Linguist., vol. 12, pp. 157–173, 2024.
+
+[7] Y. Li et al., "A KV cache-centric analysis of long-context methods," arXiv preprint arXiv:2412.10319, 2024.
+
+[8] Y. A. Malkov and D. A. Yashunin, "Efficient and robust approximate nearest neighbor search using hierarchical navigable small world graphs," IEEE Trans. Pattern Anal. Mach. Intell., vol. 42, no. 4, pp. 824–836, 2020.
+
+[9] J. Johnson, M. Douze, and H. Jégou, "Billion-scale similarity search with GPUs," IEEE Trans. Big Data, vol. 7, no. 3, pp. 535–547, 2021.
+
+[10] O. Jafari, P. Maurya, P. Nagarkar, K. M. Islam, and C. Crushev, "A survey on locality sensitive hashing algorithms and their applications," arXiv preprint arXiv:2102.08942, 2021.
+
+[11] H. Liu, W. Zhou, Z. Wu, S. Zhang, and X. Li, "Refining codes for locality sensitive hashing," IEEE Trans. Knowl. Data Eng., vol. 36, no. 3, pp. 1274–1284, 2024.
+
+[12] J. Gao, D. He, X. Tan, T. Qin, L. Wang, and T. Liu, "Representation degeneration problem in training natural language generation models," in Proc. Int. Conf. Learn. Represent. (ICLR), 2020.
+
+[13] Republik Indonesia, "Undang-Undang Republik Indonesia Nomor 27 Tahun 2022 tentang Pelindungan Data Pribadi," Lembaran Negara Republik Indonesia Tahun 2022 Nomor 196, 2022.
+
+[14] A. Singh and S. Gupta, "Learning to hash: a comprehensive survey of deep learning-based hashing methods," Knowl. Inf. Syst., vol. 64, no. 10, pp. 2567–2618, 2022.
+
+[15] M. Aumüller, E. Bernhardsson, and A. Faithfull, "ANN-Benchmarks: A benchmarking tool for approximate nearest neighbor algorithms," Inf. Syst., vol. 87, p. 101374, 2020.
+
+[16] W. Wang et al., "MiniLM: Deep self-attention distillation for task-agnostic compression of pre-trained transformers," in Proc. Adv. Neural Inf. Process. Syst. (NeurIPS), vol. 33, pp. 5776–5788, 2020.
+
+[17] N. Reimers and I. Gurevych, "Making monolingual sentence embeddings multilingual using knowledge distillation," in Proc. Conf. Empir. Methods Nat. Lang. Process. (EMNLP), pp. 4512–4525, 2020.
+
+[18] Y. Gong, S. Lazebnik, A. Gordo, and F. Perronnin, "Iterative quantization: A procrustean approach to learning binary codes for large-scale image retrieval," IEEE Trans. Pattern Anal. Mach. Intell., vol. 35, no. 12, pp. 2916–2929, 2013.
+
+[19] K. Peffers, T. Tuunanen, M. A. Rothenberger, and S. Chatterjee, "A design science research methodology for information systems research," J. Manage. Inf. Syst., vol. 24, no. 3, pp. 45–77, 2007.
+
+[20] M. S. Charikar, "Similarity estimation techniques from rounding algorithms," in Proc. 34th Annu. ACM Symp. Theory Comput. (STOC), pp. 380–388, 2002.

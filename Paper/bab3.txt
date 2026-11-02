@@ -1,0 +1,130 @@
+BAB 3. METODOLOGI PENELITIAN
+
+3.1 Jenis Pendekatan
+
+Penelitian ini menggunakan pendekatan kuantitatif-eksperimental yang dipadukan dengan kerangka kerja Design Science Research Methodology (DSRM) yang dirumuskan oleh Peffers dkk. [21]. Pendekatan kuantitatif diterapkan untuk mengukur kinerja komputasi dan akurasi sistem temu balik secara objektif melalui metrik terstandarisasi, seperti Cosine Overlap@k, Tie-Tolerant Recall@k, Cosine Quality Ratio, Needle Hit@k, Mean Reciprocal Rank (MRR), waktu pembentukan indeks, serta konsumsi memori fisik terisolasi (Peak Working Set RAM) [15]. Metode eksperimental diwujudkan melalui pengujian terkontrol terhadap variabel arsitektur, parameter kuantisasi, dan variasi data masukan guna menguji hipotesis kinerja sistem H1 hingga H4.
+
+Kerangka kerja DSRM dipilih karena fokus utama penelitian ini adalah perekayasaan artefak perangkat lunak (software artifact) berupa modul memori episodik in-process (LSH-Memory-Wrapper) untuk memecahkan masalah amnesia komputasi pada model bahasa lokal di lingkungan CPU edge [21]. DSRM menyediakan panduan metodologis berulang (iteratif) yang menjamin keterkaitan logis antara identifikasi kendala komputasi fisik, perancangan struktur data biner, implementasi algoritma, serta validasi empiris berbasis pembuktian ilmiah yang dapat direproduksi secara deterministik.
+
+3.2 Alat dan Bahan
+
+Pelaksanaan eksperimen dan pengembangan artefak dalam penelitian ini menggunakan konfigurasi perangkat keras, perangkat lunak pendukung, rantai alat kompilasi (compiler toolchain), pustaka pembanding terisolasi (baseline), serta dataset pengujian terstandarisasi.
+
+1. Perangkat Keras (Hardware):
+Eksperimen dijalankan pada laptop komersial standar dengan spesifikasi:
+- Prosesor: AMD Ryzen 5 PRO 4650U with Radeon Graphics (6 Cores, 12 Threads, arsitektur x86-64 Zen 2, frekuensi dasar 2,1 GHz, boost clock hingga 4,0 GHz, cache L3 8 MB).
+- Memori Utama (RAM): 16,0 GB DDR4-3200 SODIMM (konfigurasi Dual-Rank Dual-Channel, bandwidth teoritis 45–51 GB/s).
+- Media Penyimpanan: SSD NVMe PCIe 3.0 x4 berkapasitas 512 GB (kecepatan baca sekuensial ~2.400 MB/s, tulis ~1.800 MB/s).
+- Ketiadaan Akselerasi Eksternal: Seluruh eksperimen dieksekusi murni pada CPU tanpa GPU eksternal guna memverifikasi kelayakan edge AI mandiri.
+
+2. Perangkat Lunak dan Kompiler:
+- Sistem Operasi: Microsoft Windows 11 Pro 64-bit (Build 26200).
+- Bahasa Pemrograman: Python 3.14 (CPython 64-bit).
+- Pustaka Numerik: NumPy 2.2+ (mendukung operasi vektorisasi SIMD native x86 POPCNT via np.bitwise_count, np.packbits, serta pemilahan linier np.argpartition) [22] dan SciPy 1.15+ (dekomposisi nilai eigen eigh dan Singular Value Decomposition SVD Procrustes) [23].
+- Kompiler Native C++: MinGW-w64 G++ 16.1.0 dengan flag arsitektur: `-O3 -march=native -mfma -mavx2 -static-libgcc -static-libstdc++ -Wl,-Bstatic -lstdc++ -lpthread -Wl,-Bdynamic`. Pustaka C++ dikompilasi secara statis menghasilkan modul ekstensi mandiri tanpa dependensi runtime DLL eksternal.
+- Ekstraksi Representasi Semantik: sentence-transformers 3.3.0 dengan model dasar all-MiniLM-L6-v2 (dimensi d=384, normalisasi bola L2, rerata inferensi CPU 0,68 ms/kalimat) [16] dan pembanding paraphrase-multilingual-MiniLM-L12-v2 [17].
+- Inferensi LLM Lokal: llama-cpp-python rilis 2024 [24] dengan model Phi-3 Mini 3,8B Instruct [4] dan Llama-3 8B Instruct [5] terkuantisasi 4-bit (format GGUF Q4_K_M).
+- Isolasi Memori: psutil 6.1.0 untuk merekam Windows peak_wset (Peak Working Set) pada subproses independen.
+
+3. Pustaka Pembanding (11 Baseline M1 s.d. M11):
+Untuk menjamin komparasi yang adil dan komprehensif, dievaluasi 11 metode baseline dalam subproses terisolasi:
+- M1: Exact Cosine Flat In-Memory (NumPy BLAS Float32, batas atas teoritis recall 100%).
+- M2: Exact Cosine Flat Disk-Backed (np.memmap Float16, membaca disk sekuensial).
+- M3: FAISS IndexFlatIP (C++ AVX2 dot-product in-memory) [9].
+- M4: FAISS IndexLSH 128-bit Mentah (Hamming-only tanpa re-ranking).
+- M5: FAISS IndexLSH 128-bit + Re-rank (Random projection dengan re-ranking Float32).
+- M6: FAISS IndexHNSWFlat (M=16, sweep efSearch in {16, 32, 64, 128, 256}).
+- M7: hnswlib Native (M=16, sweep efSearch in {16, 32, 64, 128, 256}) dikompilasi via MinGW-w64 [8].
+- M8: Annoy Native (Metrik Angular, sweep n_trees in {10, 50} dan search_k) dikompilasi via MinGW-w64 [25].
+- M9: FAISS ITQTransform + IndexRefineFlat (Kuantisasi data-dependent FAISS resmi) [9].
+- M10: LSH-Memory-Wrapper Mentah (128-bit Hamming-only tanpa re-ranking).
+- M11: LSH-Memory-Wrapper Lengkap (ITQ 128-bit dan 256-bit + Memmap Float16 Re-rank).
+
+4. Dataset Penelitian:
+Penelitian menggunakan empat kelompok korpus pengujian dengan peran terisolasi:
+a. Korpus Riil PingPong QA (8.123 Turn, 99 Dialog):
+Korpus percakapan dwibahasa alami Indonesia-Inggris (lisensi CC-BY-SA 4.0) yang dipulihkan secara bersih menggunakan parser ekspresi reguler multiline kanonik: `^#(\d+)\s+([A-Z])(?:\s*\[reply to #(\d+)\])?:\s*(.*)`. Terdiri atas 2.387 turn Bahasa Indonesia (29,4%), 1.145 turn Bahasa Inggris (14,1%), dan 4.591 turn Campuran ID-EN (56,5%). Digunakan untuk kalibrasi sigma empiris, analisis korelasi Spearman, dan evaluasi 5-Fold Cross Validation dialog-split dengan aturan eksklusi +/- 2 turn.
+b. Korpus Sintetis-Vektor (SV):
+Vektor sintetis acak berkluster (100 entri per kluster) khusus untuk stress test skalabilitas latensi pemindaian POPCNT dan alokasi memori murni pada skala 10k, 50k, 200k, dan 1M. Tidak digunakan untuk evaluasi recall komparatif.
+c. Korpus Sintetis-Kovarians Riil (SKR):
+Vektor skala besar (50k, 200k, 1M) yang dibangkitkan dari distribusi multivariat non-isotropik N(mu_real, Sigma_real) berbasis kovarians empiris 8.123 embedding PingPong QA ditambah derau terkalibrasi. Korpus SKR digunakan untuk menguji kurva Pareto Recall vs Latensi pada skala masif agar struktur manifold teks nyata tetap terjaga.
+d. Korpus Sintetis-Teks (ST):
+Dialog sintetis 5.000 turn yang disisipi 30 fakta jarum terstratifikasi ke dalam 5 kelompok usia turn untuk evaluasi downstream Needle Hit@k.
+
+3.3 Tahapan Penelitian (DSRM)
+
+Penelitian dilaksanakan melalui enam tahapan DSRM Peffers dkk. [21]:
+1. Identifikasi Masalah: Menganalisis fenomena amnesia episodik pada LLM lokal CPU, batasan KV-Cache, dan pembengkakan RAM database vektor eksternal (Bab 1).
+2. Definisi Tujuan Solusi: Menetapkan target kuantitatif terukur (build < 2 detik, Overlap@10 >= 80%, RAM biner < 16 MB pada 1M entri, zero external dependency).
+3. Desain Artefak: Merancang arsitektur LSH-Memory-Wrapper (Hasher ITQ SVD Procrustes, Hamming Backend POPCNT unrolled 1D kolom, MemmapStore Float16 disk, EpisodicScorer, dan adapter Llama.cpp).
+4. Implementasi Artefak: Mengembangkan pustaka lsh-agent-memory, optimasi C++ static linking MinGW-w64, dan demonstrasi interaksi asisten lokal.
+5. Evaluasi Kinerja: Menjalankan kalibrasi sigma korpus lengkap, benchmark multi-skala 11 baseline, 5-fold CV leave-one-out dialog-split, dan needle QA terstratifikasi.
+6. Komunikasi Ilmiah: Mempublikasikan kode sumber repositori terbuka dan menyusun laporan tesis komprehensif.
+
+3.4 Metode Pengujian dan Evaluasi
+
+3.4.1 Kalibrasi Parameter Dispersi Derau (Sigma) & Korelasi Spearman
+Mengekstraksi 8.123 turn bersih dari 99 dialog PingPong QA, menghitung profil kemiripan kosinus tetangga terdekat top-1 hingga top-10 riil, dan menemukan nilai sigma empiris optimal melalui minimasi Mean Squared Error (MSE). Menguji korelasi peringkat Spearman (rho) antara jarak Hamming bitcode ITQ dan jarak sudut kosinus pada tingkat global dan lokal top-20.
+
+3.4.2 Uji Kinerja Skalabilitas & Presisi Disk (SV dan SKR)
+Mengukur latensi kueri (median p50, p95, IQR), waktu build, alokasi RAM working set terisolasi, dan ukuran disk pada skala 10k, 50k, 200k, dan 1M. Mengevaluasi presisi disk Float16 vs Float32 serta simulasi kondisi cold-cache versus warm-cache setelah pengosongan buffer RAM sistem operasi.
+
+3.4.3 Pengujian Teks Nyata PingPong QA (5-Fold Cross Validation Dialog-Split)
+99 dialog dibagi secara ketat menjadi 5 lipatan (folds) berbasis dialog utuh tanpa kebocoran data. Seluruh turn pada fold uji dievaluasi sebagai kueri (leave-one-out) dengan aturan eksklusi tumpang-tindih +/- 2 turn tetangga pada dialog yang sama. Kandidat disaring berdasarkan ukuran pool relatif: 5%, 10%, dan 20% dari N_fold, dibandingkan terhadap Random Pool Baseline. Ablasi mencakup unit turn tunggal vs 3-turn sliding window, segmentasi bahasa (ID, EN, Campuran), ukuran sampel fit ITQ (500, 1000, 2500, full), dan transfer semantik lintas-domain.
+
+3.4.4 Komparasi Head-to-Head Baseline Terisolasi
+Mengeksekusi 11 baseline (M1 s.d. M11) dalam subproses terpisah untuk merekam Windows peak_wset dan latensi kueri murni. Melakukan sweep parameter multi-titik untuk memetakan kurva Pareto Recall vs Latensi pada korpus SKR 50k, 200k, dan 1M.
+
+3.4.5 Uji Downstream Needle Hit@k Terstratifikasi
+Menyisipkan 30 pasangan fakta jarum ke dalam 5 kelompok usia turn (Sangat Baru Delta t in [10, 50], Baru [51, 200], Menengah [201, 800], Lama [801, 2000], dan Sangat Lama [2001, 5000]) lintas 5 random seed penempatan (total 150 uji per metode) di bawah 2 tingkat kesulitan: Tumpang-Tindih Leksikal Tinggi vs Parafrase Semantik Rendah Tumpang-Tindih. Membandingkan 7 metode: B1 (No Memory), B2 (Sliding-10), B3 (Recent-50), B4 (BM25 Leksikal), B5 (LSH alpha=0,7), B6 (LSH alpha=1,0), dan B7 (Exact Upper Bound).
+
+3.5 Definisi Formal Metrik dan Analisis Data
+
+Pengukuran akurasi dan efisiensi dihitung berdasarkan rumusan matematis baku:
+
+1. Cosine Overlap@k:
+Mengukur proporsi tetangga terdekat ground truth sejati (G_k) yang berhasil dijaring oleh sistem (R_k):
+Overlap@k = (|R_k ∩ G_k| / k) × 100%
+
+2. Tie-Tolerant Recall@k (epsilon):
+Memperhitungkan kandidat dengan nilai kosinus setara dalam batas resolusi toleransi epsilon:
+Tie-Tolerant Recall@k(epsilon) = (1/k) ∑_{i ∈ R_k} I(cos(q, m_i) >= cos(q, g_k) - epsilon) × 100%
+dengan epsilon = 10^-4 untuk Float32 dan epsilon = 10^-3 untuk Float16 (menyesuaikan resolusi mantissa 2^-11 = 0,000488).
+
+3. Cosine Quality Ratio:
+Mengukur rasio mutu kemiripan rata-rata kandidat sistem terhadap rata-rata ground-truth eksak:
+Quality Ratio = ((1/k) ∑_{i ∈ R_k} cos(q, m_i)) / ((1/k) ∑_{j ∈ G_k} cos(q, g_j)) × 100%
+
+4. Target Needle Hit@k:
+Indikator biner keberhasilan pemulihan fakta jarum spesifik:
+Needle Hit@k = I(m_target ∈ R_k)
+Dilaporkan lengkap dengan Wilson Score 95% Confidence Interval untuk proporsi binomial:
+Interval = (p + z^2 / (2N) +/- z * sqrt(p(1-p)/N + z^2 / (4N^2))) / (1 + z^2 / N)
+
+5. Mean Reciprocal Rank (MRR):
+MRR = (1 / |Q|) ∑_{i=1}^{|Q|} (1 / rank_i)
+
+3.6 Pengujian Hipotesis Statistik
+
+Empat hipotesis penelitian diuji secara formal:
+- H1: LSH-Memory-Wrapper (ITQ + Re-rank) menghasilkan Overlap@10 lebih tinggi secara signifikan dibanding FAISS IndexLSH mentah pada alokasi RAM yang sama (16 byte/vektor). Diuji menggunakan Wilcoxon signed-rank test dua sisi berpasangan pada 8.123 kueri riil lengkap dengan ukuran efek rank-biserial correlation r.
+- H2: Pada skala >= 200k entri, LSH-Memory-Wrapper mencapai latensi kueri yang lebih rendah secara signifikan dibanding Exact Flat Disk-Backed (M2, np.memmap Float16) karena eliminasi sequential NVMe I/O transfer.
+- H3: Pada skala <= 50k entri, Exact Flat In-Memory lebih cepat; namun pada skala >= 1M entri, LSH-Memory-Wrapper melampaui Exact Flat In-Memory berkat reduksi kompleksitas komputasi dari O(N * d) floating-point menjadi O(N * b/64) bitwise POPCNT.
+- H4: Pembobotan kebaruan temporal (alpha=0,7) menjaga akurasi fakta baru (Delta t <= 200) mendekati batas atas semantik, namun mengalami degradasi teratur pada fakta lama (Delta t > 2000) dibanding mode semantik murni (alpha=1,0).
+
+Daftar Pustaka Bab 3
+
+[4] M. Abdin et al., "Phi-3 technical report: A highly capable language model locally on your phone," arXiv preprint arXiv:2404.14219, 2024.
+[5] A. Dubey et al., "The Llama 3 herd of models," arXiv preprint arXiv:2407.21783, 2024.
+[6] N. F. Liu et al., "Lost in the middle: How language models use long contexts," Trans. Assoc. Comput. Linguist., vol. 12, pp. 157–173, 2024.
+[7] Y. Li et al., "A KV cache-centric analysis of long-context methods," arXiv preprint arXiv:2412.10319, 2024.
+[8] Y. A. Malkov and D. A. Yashunin, "Efficient and robust approximate nearest neighbor search using hierarchical navigable small world graphs," IEEE Trans. Pattern Anal. Mach. Intell., vol. 42, no. 4, pp. 824–836, 2020.
+[9] J. Johnson, M. Douze, and H. Jégou, "Billion-scale similarity search with GPUs," IEEE Trans. Big Data, vol. 7, no. 3, pp. 535–547, 2021.
+[15] H. Samet, Foundations of Multidimensional and Metric Data Structures. San Francisco, CA: Morgan Kaufmann, 2006.
+[16] W. Wang et al., "MiniLM: Deep self-attention distillation for lightweight natural language understanding," in Proc. NeurIPS, 2020.
+[17] N. Reimers and I. Gurevych, "Sentence-BERT: Sentence embeddings using Siamese BERT-networks," in Proc. EMNLP, 2019.
+[21] K. Peffers et al., "A design science research methodology for information systems research," J. Manage. Inf. Syst., vol. 24, no. 3, pp. 45–77, 2007.
+[22] C. R. Harris et al., "Array programming with NumPy," Nature, vol. 585, no. 7825, pp. 357–362, 2020.
+[23] P. Virtanen et al., "SciPy 1.0: fundamental algorithms for scientific computing in Python," Nature Methods, vol. 17, no. 3, pp. 261–272, 2020.
+[24] G. Gerganov, "llama.cpp: Port of Facebook's LLaMA model in C/C++," GitHub repository, 2024.
+[25] E. Bernhardsson, "Annoy: Approximate Nearest Neighbors Oh Yeah in C++/Python," GitHub repository, 2020.
