@@ -442,8 +442,13 @@ def build_bab4():
         i += 1
 
     docx_path = Path("paper/bab4.docx")
-    doc.save(str(docx_path))
-    print(f"[OK] Generated formatted Microsoft Word document at {docx_path}!")
+    try:
+        doc.save(str(docx_path))
+        print(f"[OK] Generated formatted Microsoft Word document at {docx_path}!")
+    except PermissionError:
+        alt_path = Path("paper/bab4_revisi.docx")
+        doc.save(str(alt_path))
+        print(f"[OK] File open in Word; successfully generated to {alt_path}!")
 
 
 if __name__ == "__main__":
