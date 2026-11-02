@@ -44,11 +44,11 @@ To ensure methodological clarity, the retrieval accuracy reported in this resear
 
 For a given query vector $q$, let $G_{10}(q)$ denote the set of top-10 ground-truth nearest neighbors computed via exact brute-force cosine similarity (Float32 NumPy BLAS), and let $A_{10}(q)$ denote the top-10 candidate neighbors retrieved by the proposed system:
 
-$$\operatorname{Overlap@10}(q) = \frac{|G_{10}(q) \cap A_{10}(q)|}{10}$$
+$$\text{Overlap@10}(q) = \frac{|G_{10}(q) \cap A_{10}(q)|}{10}$$
 
 The reported metric is the mean overlap averaged over 1,000 held-out evaluation queries:
 
-$$\overline{\operatorname{Overlap@10}} = \frac{1}{|Q|} \sum_{q \in Q} \operatorname{Overlap@10}(q)$$
+$$\overline{\text{Overlap@10}} = \frac{1}{|Q|} \sum_{q \in Q} \text{Overlap@10}(q)$$
 
 > **Important Clarification:**
 > - A score of **94.20%** indicates that, on average, **9.42 out of the 10 exact nearest neighbors** are successfully captured in the top-10 retrieval set.
