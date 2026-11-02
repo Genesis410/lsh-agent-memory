@@ -17,6 +17,7 @@ dist/
 # Virtual environments
 .venv/
 .venv_bench/
+.riset/.venv_bench/
 env/
 venv/
 ENV/
@@ -41,5 +42,7 @@ temp_test_*.json
 # Regenerable via scripts/generate_datasets.py
 data/benchmarks/*.npy
 data/benchmarks/*.dat
-!data/benchmarks/queries_1000.npy
-!data/benchmarks/gt_top10_*.npy
+.riset/data/benchmarks/*.npy
+.riset/data/benchmarks/*.dat
+!.riset/data/benchmarks/queries_1000.npy
+!.riset/data/benchmarks/gt_top10_*.npy

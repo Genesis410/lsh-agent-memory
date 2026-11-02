@@ -7,6 +7,7 @@ from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ALIGN_VERTICAL
 from docx.oxml import OxmlElement, parse_xml
 from docx.oxml.ns import qn, nsdecls
 import os
+from pathlib import Path
 
 doc = docx.Document()
 
@@ -480,8 +481,11 @@ p_code.paragraph_format.space_after = Pt(6)
 r_code = p_code.add_run(mermaid_code)
 set_font(r_code, name='Consolas', size=9.5)
 
+base_dir = Path(__file__).resolve().parent
+paper_dir = base_dir / 'Paper'
+
 # Insert Picture
-img_path = 'paper/kerangka_pikiran.jpg'
+img_path = str(paper_dir / 'kerangka_pikiran.jpg')
 if os.path.exists(img_path):
     p_img = doc.add_paragraph()
     p_img.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -531,8 +535,8 @@ for ref in references:
     r_ref = p_ref.add_run(ref)
     set_font(r_ref, size=10)
 
-out_path = 'paper/bab2.docx'
-out_path_rev = 'paper/bab2_revisi.docx'
+out_path = str(paper_dir / 'bab2.docx')
+out_path_rev = str(paper_dir / 'bab2_revisi.docx')
 try:
     doc.save(out_path)
     print(f'Document successfully created and saved to {out_path}')

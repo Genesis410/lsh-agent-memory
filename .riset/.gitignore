@@ -1,0 +1,48 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+
+# C extensions & build
+*.o
+*.obj
+*.so
+*.dylib
+*.dll
+build/
+dist/
+*.egg-info/
+
+# Virtual environments
+.venv/
+.venv_bench/
+.riset/.venv_bench/
+env/
+venv/
+ENV/
+
+# Microsoft Office temporary lock files
+~$*.docx
+~$*.pptx
+~$*.xlsx
+
+# Operating System files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+# Temporary scratch files
+*.tmp
+*.log
+temp_test_*.json
+
+# Large synthetic benchmark data matrices (>100MB exceeds GitHub push limits)
+# Regenerable via scripts/generate_datasets.py
+data/benchmarks/*.npy
+data/benchmarks/*.dat
+.riset/data/benchmarks/*.npy
+.riset/data/benchmarks/*.dat
+!.riset/data/benchmarks/queries_1000.npy
+!.riset/data/benchmarks/gt_top10_*.npy

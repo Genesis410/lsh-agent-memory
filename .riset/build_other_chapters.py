@@ -82,9 +82,11 @@ def main():
     print("=================================================================")
     print("COMPILING DOCX FOR BAB 1, BAB 3, AND BAB 5")
     print("=================================================================")
-    convert_txt_to_docx(Path("paper/bab1.txt"), Path("paper/bab1.docx"))
-    convert_txt_to_docx(Path("paper/bab3.txt"), Path("paper/bab3.docx"))
-    convert_txt_to_docx(Path("paper/bab5.txt"), Path("paper/bab5.docx"))
+    base_dir = Path(__file__).resolve().parent
+    paper_dir = base_dir / "Paper"
+    convert_txt_to_docx(paper_dir / "bab1.txt", paper_dir / "bab1.docx")
+    convert_txt_to_docx(paper_dir / "bab3.txt", paper_dir / "bab3.docx")
+    convert_txt_to_docx(paper_dir / "bab5.txt", paper_dir / "bab5.docx")
     print("[ALL DONE] All chapter documents compiled.")
 
 if __name__ == "__main__":
