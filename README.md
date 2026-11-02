@@ -31,7 +31,7 @@ Local small language models (such as Phi-3, Mistral, and Llama-3 8B) running on 
    - Ideal for legal, medical, or enterprise assistants adhering to strict data sovereignty regulations (e.g., Indonesia UU No. 27/2022 PDP, GDPR, HIPAA) where chat history cannot leave the local machine to third-party cloud VectorDBs (Pinecone, Weaviate Cloud).
    - Runs 100% in-process as an embedded Python library; data stays in local encrypted `.dat`/`.npy` files.
 4. **Zero-DevOps Microservice & Script Integration**:
-   - Requires no Docker daemon, no background service daemon, and no C++ compiler toolchain. Standard `pip install lsh-agent-memory` runs out of the box with pure NumPy and SciPy.
+   - Requires no Docker daemon, no background service daemon, and no C++ compiler toolchain. Runs out of the box with pure NumPy and SciPy.
 
 ---
 
@@ -180,15 +180,26 @@ With $\alpha = 0.8$ and half-life $h = 50.0$ turns:
 
 ## Installation
 
+### Option 1: Direct Pip Install from GitHub (Recommended)
+
 ```bash
-# Clone the repository
+# Core library (NumPy and SciPy only)
+pip install "git+https://github.com/Genesis410/lsh-agent-memory.git"
+
+# With LangChain & Llama.cpp adapters
+pip install "lsh-agent-memory[all] @ git+https://github.com/Genesis410/lsh-agent-memory.git"
+```
+
+### Option 2: Clone for Local Development & Research
+
+```bash
 git clone https://github.com/Genesis410/lsh-agent-memory.git
 cd lsh-agent-memory
 
-# Install core library (NumPy and SciPy only)
+# Install in editable mode
 pip install -e .
 
-# Optional: Install with LangChain and Llama.cpp adapters
+# Or with optional framework adapters
 pip install -e ".[all]"
 ```
 
