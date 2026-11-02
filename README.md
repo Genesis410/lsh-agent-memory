@@ -1,5 +1,6 @@
 # LSH-Agent-Memory
 
+[![PyPI version](https://img.shields.io/pypi/v/lsh-agent-memory.svg)](https://pypi.org/project/lsh-agent-memory/)
 [![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue.svg)](https://www.python.org/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Hardware](https://img.shields.io/badge/hardware-CPU%20x86--64%20SIMD-success.svg)]()
@@ -180,17 +181,27 @@ With $\alpha = 0.8$ and half-life $h = 50.0$ turns:
 
 ## Installation
 
-### Option 1: Direct Pip Install from GitHub (Recommended)
+### Option 1: Official PyPI Release (Recommended)
 
 ```bash
 # Core library (NumPy and SciPy only)
+pip install lsh-agent-memory
+
+# With optional framework adapters (LangChain & Llama.cpp)
+pip install "lsh-agent-memory[all]"
+```
+
+### Option 2: Direct Install from GitHub (Bleeding Edge)
+
+```bash
+# Core library
 pip install "git+https://github.com/Genesis410/lsh-agent-memory.git"
 
 # With LangChain & Llama.cpp adapters
 pip install "lsh-agent-memory[all] @ git+https://github.com/Genesis410/lsh-agent-memory.git"
 ```
 
-### Option 2: Clone for Local Development & Research
+### Option 3: Clone for Local Development & Research
 
 ```bash
 git clone https://github.com/Genesis410/lsh-agent-memory.git
