@@ -102,6 +102,28 @@ When designing long-term memory for resource-constrained edge CPUs, reporting bi
 
 ---
 
+## Datasets
+
+| Dataset | Type | Source / How obtained | Scale used |
+| :--- | :--- | :--- | :--- |
+| **PingPong (ID-EN, answerable)** | Public QA/dialog, code-switching Indonesian–English | HuggingFace [`code-switching/question-answer`](https://huggingface.co/datasets/code-switching/question-answer) subset `id-en/answerable` (`test-00000-of-00001.csv`). Loader: [`research_artifacts/scripts/pingpong_loader.py`](research_artifacts/scripts/pingpong_loader.py), verifier: [`research_artifacts/scripts/download_pingpong.py`](research_artifacts/scripts/download_pingpong.py). Reference paper: [arXiv:2601.17277 “PINGPONG: A Natural Benchmark for Multi-Turn Code-Switching Dialogues”](https://arxiv.org/abs/2601.17277). | 495 QA rows; **99 unique dialogs, 8,123 turns** (5-fold dialog-split CV, ±2-turn overlap exclusion). |
+| **SV** | Synthetic vectors | Generated for scalability experiments (scripted/configured; no human text). | Scale stress (10k–1M). |
+| **SKR** | Synthetic | Generated to match the **covariance distribution of PingPong embeddings**. | Embedding-distribution-matched evaluation. |
+| **ST** | Synthetic dialogs | Generated for **downstream needle retrieval** (long-conversation QA). | Needle-in-a-Haystack Hit@10. |
+
+*Notes:* PingPong is often referenced as CC BY-SA 4.0, but the license should be confirmed against the official source documentation before a final claim. PII screening here is heuristic (names/addresses/phone/account IDs); the source license does not remove privacy obligations.
+
+## Experimental Artifacts (public)
+
+Published in [`research_artifacts/`](research_artifacts/) for reproducibility:
+- **Configs & results (JSON):** [`research_artifacts/benchmarks/`](research_artifacts/benchmarks/) — `experiment_results_bab4.json` (master), `stratified_needle_qa_results.json`, `real_text_experiments_results.json`, `real_baseline_results.json`, `diagnostic_report.json`.
+- **Benchmark/eval scripts:** `compile_master_results_v2.py`, `run_stratified_needle_qa.py`, `run_real_text_experiments.py`, `run_method_isolated.py`, `run_real_baselines.py`, `validate_results_integrity.py`, `diagnose_hash_quality.py`, `generate_datasets.py`, `bench_*.py`.
+- **Figure scripts:** [`generate_individual_figures.py`](research_artifacts/scripts/generate_individual_figures.py), [`generate_bab4_figures.py`](research_artifacts/scripts/generate_bab4_figures.py).
+- **Key figure:** [`research_artifacts/figures/fig4_10_downstream_needle_qa.png`](research_artifacts/figures/fig4_10_downstream_needle_qa.png) (corrected; Needle Hit@10, 95% Wilson CI). Large raw `.npy/.dat` matrices are intentionally excluded from git (see `.gitignore`).
+- **Dataset tooling:** PingPong loader + verifier in [`research_artifacts/scripts/`](research_artifacts/scripts/).
+
+Local-only (not pushed): full thesis drafts, raw embedding matrices, and the private `.riset/` workspace remain on the author's machine.
+
 ### 3. Experimental Setup & Reproducibility Protocol
 
 All benchmarks were executed under identical conditions using a standardized, reproducible test harness:

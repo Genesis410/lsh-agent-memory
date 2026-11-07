@@ -1,0 +1,814 @@
+{
+  "B1_No_Memory": {
+    "overall_high_overlap": {
+      "hit_rate_pct": 0.0,
+      "wilson_ci_95": [
+        0.0,
+        2.5
+      ],
+      "successes": 0,
+      "total": 150
+    },
+    "overall_low_overlap": {
+      "hit_rate_pct": 0.0,
+      "wilson_ci_95": [
+        0.0,
+        2.5
+      ],
+      "successes": 0,
+      "total": 150
+    },
+    "brackets_high_overlap": {
+      "Sangat Baru": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Baru": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Menengah": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Lama": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Sangat Lama": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      }
+    },
+    "brackets_low_overlap": {
+      "Sangat Baru": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Baru": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Menengah": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Lama": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Sangat Lama": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      }
+    },
+    "mrr_high_overlap": 0.0,
+    "mrr_low_overlap": 0.0
+  },
+  "B2_Sliding_Window_10": {
+    "overall_high_overlap": {
+      "hit_rate_pct": 0.0,
+      "wilson_ci_95": [
+        0.0,
+        2.5
+      ],
+      "successes": 0,
+      "total": 150
+    },
+    "overall_low_overlap": {
+      "hit_rate_pct": 0.0,
+      "wilson_ci_95": [
+        0.0,
+        2.5
+      ],
+      "successes": 0,
+      "total": 150
+    },
+    "brackets_high_overlap": {
+      "Sangat Baru": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Baru": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Menengah": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Lama": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Sangat Lama": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      }
+    },
+    "brackets_low_overlap": {
+      "Sangat Baru": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Baru": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Menengah": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Lama": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Sangat Lama": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      }
+    },
+    "mrr_high_overlap": 0.0,
+    "mrr_low_overlap": 0.0
+  },
+  "B3_Recent_50_Cosine": {
+    "overall_high_overlap": {
+      "hit_rate_pct": 20.0,
+      "wilson_ci_95": [
+        14.38,
+        27.11
+      ],
+      "successes": 30,
+      "total": 150
+    },
+    "overall_low_overlap": {
+      "hit_rate_pct": 5.33,
+      "wilson_ci_95": [
+        2.73,
+        10.17
+      ],
+      "successes": 8,
+      "total": 150
+    },
+    "brackets_high_overlap": {
+      "Sangat Baru": {
+        "hit_rate_pct": 100.0,
+        "wilson_ci_95": [
+          88.65,
+          100.0
+        ],
+        "successes": 30,
+        "total": 30
+      },
+      "Baru": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Menengah": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Lama": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Sangat Lama": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      }
+    },
+    "brackets_low_overlap": {
+      "Sangat Baru": {
+        "hit_rate_pct": 26.67,
+        "wilson_ci_95": [
+          14.18,
+          44.45
+        ],
+        "successes": 8,
+        "total": 30
+      },
+      "Baru": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Menengah": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Lama": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Sangat Lama": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      }
+    },
+    "mrr_high_overlap": 0.2,
+    "mrr_low_overlap": 0.0142
+  },
+  "B4_BM25_Lexical": {
+    "overall_high_overlap": {
+      "hit_rate_pct": 100.0,
+      "wilson_ci_95": [
+        97.5,
+        100.0
+      ],
+      "successes": 150,
+      "total": 150
+    },
+    "overall_low_overlap": {
+      "hit_rate_pct": 16.67,
+      "wilson_ci_95": [
+        11.55,
+        23.45
+      ],
+      "successes": 25,
+      "total": 150
+    },
+    "brackets_high_overlap": {
+      "Sangat Baru": {
+        "hit_rate_pct": 100.0,
+        "wilson_ci_95": [
+          88.65,
+          100.0
+        ],
+        "successes": 30,
+        "total": 30
+      },
+      "Baru": {
+        "hit_rate_pct": 100.0,
+        "wilson_ci_95": [
+          88.65,
+          100.0
+        ],
+        "successes": 30,
+        "total": 30
+      },
+      "Menengah": {
+        "hit_rate_pct": 100.0,
+        "wilson_ci_95": [
+          88.65,
+          100.0
+        ],
+        "successes": 30,
+        "total": 30
+      },
+      "Lama": {
+        "hit_rate_pct": 100.0,
+        "wilson_ci_95": [
+          88.65,
+          100.0
+        ],
+        "successes": 30,
+        "total": 30
+      },
+      "Sangat Lama": {
+        "hit_rate_pct": 100.0,
+        "wilson_ci_95": [
+          88.65,
+          100.0
+        ],
+        "successes": 30,
+        "total": 30
+      }
+    },
+    "brackets_low_overlap": {
+      "Sangat Baru": {
+        "hit_rate_pct": 16.67,
+        "wilson_ci_95": [
+          7.34,
+          33.56
+        ],
+        "successes": 5,
+        "total": 30
+      },
+      "Baru": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Menengah": {
+        "hit_rate_pct": 33.33,
+        "wilson_ci_95": [
+          19.23,
+          51.22
+        ],
+        "successes": 10,
+        "total": 30
+      },
+      "Lama": {
+        "hit_rate_pct": 33.33,
+        "wilson_ci_95": [
+          19.23,
+          51.22
+        ],
+        "successes": 10,
+        "total": 30
+      },
+      "Sangat Lama": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      }
+    },
+    "mrr_high_overlap": 1.0,
+    "mrr_low_overlap": 0.1278
+  },
+  "B5_LSH_Wrapper_Alpha_0.7": {
+    "overall_high_overlap": {
+      "hit_rate_pct": 94.0,
+      "wilson_ci_95": [
+        88.99,
+        96.81
+      ],
+      "successes": 141,
+      "total": 150
+    },
+    "overall_low_overlap": {
+      "hit_rate_pct": 0.67,
+      "wilson_ci_95": [
+        0.12,
+        3.68
+      ],
+      "successes": 1,
+      "total": 150
+    },
+    "brackets_high_overlap": {
+      "Sangat Baru": {
+        "hit_rate_pct": 100.0,
+        "wilson_ci_95": [
+          88.65,
+          100.0
+        ],
+        "successes": 30,
+        "total": 30
+      },
+      "Baru": {
+        "hit_rate_pct": 96.67,
+        "wilson_ci_95": [
+          83.33,
+          99.41
+        ],
+        "successes": 29,
+        "total": 30
+      },
+      "Menengah": {
+        "hit_rate_pct": 100.0,
+        "wilson_ci_95": [
+          88.65,
+          100.0
+        ],
+        "successes": 30,
+        "total": 30
+      },
+      "Lama": {
+        "hit_rate_pct": 90.0,
+        "wilson_ci_95": [
+          74.38,
+          96.54
+        ],
+        "successes": 27,
+        "total": 30
+      },
+      "Sangat Lama": {
+        "hit_rate_pct": 83.33,
+        "wilson_ci_95": [
+          66.44,
+          92.66
+        ],
+        "successes": 25,
+        "total": 30
+      }
+    },
+    "brackets_low_overlap": {
+      "Sangat Baru": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Baru": {
+        "hit_rate_pct": 3.33,
+        "wilson_ci_95": [
+          0.59,
+          16.67
+        ],
+        "successes": 1,
+        "total": 30
+      },
+      "Menengah": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Lama": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Sangat Lama": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      }
+    },
+    "mrr_high_overlap": 0.9344,
+    "mrr_low_overlap": 0.0007
+  },
+  "B6_LSH_Wrapper_Alpha_1.0": {
+    "overall_high_overlap": {
+      "hit_rate_pct": 99.33,
+      "wilson_ci_95": [
+        96.32,
+        99.88
+      ],
+      "successes": 149,
+      "total": 150
+    },
+    "overall_low_overlap": {
+      "hit_rate_pct": 7.33,
+      "wilson_ci_95": [
+        4.14,
+        12.65
+      ],
+      "successes": 11,
+      "total": 150
+    },
+    "brackets_high_overlap": {
+      "Sangat Baru": {
+        "hit_rate_pct": 100.0,
+        "wilson_ci_95": [
+          88.65,
+          100.0
+        ],
+        "successes": 30,
+        "total": 30
+      },
+      "Baru": {
+        "hit_rate_pct": 96.67,
+        "wilson_ci_95": [
+          83.33,
+          99.41
+        ],
+        "successes": 29,
+        "total": 30
+      },
+      "Menengah": {
+        "hit_rate_pct": 100.0,
+        "wilson_ci_95": [
+          88.65,
+          100.0
+        ],
+        "successes": 30,
+        "total": 30
+      },
+      "Lama": {
+        "hit_rate_pct": 100.0,
+        "wilson_ci_95": [
+          88.65,
+          100.0
+        ],
+        "successes": 30,
+        "total": 30
+      },
+      "Sangat Lama": {
+        "hit_rate_pct": 100.0,
+        "wilson_ci_95": [
+          88.65,
+          100.0
+        ],
+        "successes": 30,
+        "total": 30
+      }
+    },
+    "brackets_low_overlap": {
+      "Sangat Baru": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Baru": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Menengah": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Lama": {
+        "hit_rate_pct": 6.67,
+        "wilson_ci_95": [
+          1.85,
+          21.32
+        ],
+        "successes": 2,
+        "total": 30
+      },
+      "Sangat Lama": {
+        "hit_rate_pct": 30.0,
+        "wilson_ci_95": [
+          16.66,
+          47.88
+        ],
+        "successes": 9,
+        "total": 30
+      }
+    },
+    "mrr_high_overlap": 0.9933,
+    "mrr_low_overlap": 0.0667
+  },
+  "B7_Exact_Cosine_Upper_Bound": {
+    "overall_high_overlap": {
+      "hit_rate_pct": 100.0,
+      "wilson_ci_95": [
+        97.5,
+        100.0
+      ],
+      "successes": 150,
+      "total": 150
+    },
+    "overall_low_overlap": {
+      "hit_rate_pct": 10.0,
+      "wilson_ci_95": [
+        6.15,
+        15.84
+      ],
+      "successes": 15,
+      "total": 150
+    },
+    "brackets_high_overlap": {
+      "Sangat Baru": {
+        "hit_rate_pct": 100.0,
+        "wilson_ci_95": [
+          88.65,
+          100.0
+        ],
+        "successes": 30,
+        "total": 30
+      },
+      "Baru": {
+        "hit_rate_pct": 100.0,
+        "wilson_ci_95": [
+          88.65,
+          100.0
+        ],
+        "successes": 30,
+        "total": 30
+      },
+      "Menengah": {
+        "hit_rate_pct": 100.0,
+        "wilson_ci_95": [
+          88.65,
+          100.0
+        ],
+        "successes": 30,
+        "total": 30
+      },
+      "Lama": {
+        "hit_rate_pct": 100.0,
+        "wilson_ci_95": [
+          88.65,
+          100.0
+        ],
+        "successes": 30,
+        "total": 30
+      },
+      "Sangat Lama": {
+        "hit_rate_pct": 100.0,
+        "wilson_ci_95": [
+          88.65,
+          100.0
+        ],
+        "successes": 30,
+        "total": 30
+      }
+    },
+    "brackets_low_overlap": {
+      "Sangat Baru": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Baru": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Menengah": {
+        "hit_rate_pct": 0.0,
+        "wilson_ci_95": [
+          0.0,
+          11.35
+        ],
+        "successes": 0,
+        "total": 30
+      },
+      "Lama": {
+        "hit_rate_pct": 16.67,
+        "wilson_ci_95": [
+          7.34,
+          33.56
+        ],
+        "successes": 5,
+        "total": 30
+      },
+      "Sangat Lama": {
+        "hit_rate_pct": 33.33,
+        "wilson_ci_95": [
+          19.23,
+          51.22
+        ],
+        "successes": 10,
+        "total": 30
+      }
+    },
+    "mrr_high_overlap": 1.0,
+    "mrr_low_overlap": 0.0833
+  }
+}
