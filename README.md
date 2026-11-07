@@ -106,23 +106,22 @@ When designing long-term memory for resource-constrained edge CPUs, reporting bi
 
 | Dataset | Type | Source / How obtained | Scale used |
 | :--- | :--- | :--- | :--- |
-| **PingPong (ID-EN, answerable)** | Public QA/dialog, code-switching Indonesian–English | HuggingFace [`code-switching/question-answer`](https://huggingface.co/datasets/code-switching/question-answer) subset `id-en/answerable` (`test-00000-of-00001.csv`). Loader: [`research_artifacts/scripts/pingpong_loader.py`](research_artifacts/scripts/pingpong_loader.py), verifier: [`research_artifacts/scripts/download_pingpong.py`](research_artifacts/scripts/download_pingpong.py). Reference paper: [arXiv:2601.17277 “PINGPONG: A Natural Benchmark for Multi-Turn Code-Switching Dialogues”](https://arxiv.org/abs/2601.17277). | 495 QA rows; **99 unique dialogs, 8,123 turns** (5-fold dialog-split CV, ±2-turn overlap exclusion). |
-| **SV** | Synthetic vectors | Generated for scalability experiments (scripted/configured; no human text). | Scale stress (10k–1M). |
-| **SKR** | Synthetic | Generated to match the **covariance distribution of PingPong embeddings**. | Embedding-distribution-matched evaluation. |
+| **PingPong (ID-EN, answerable)** | Public QA/dialog, code-switching Indonesian–English | HuggingFace [`code-switching/question-answer`](https://huggingface.co/datasets/code-switching/question-answer) subset `id-en/answerable` (`test-00000-of-00001.csv`). Tooling: [`research_artifacts/scripts/pingpong_loader.py`](research_artifacts/scripts/pingpong_loader.py), [`research_artifacts/scripts/download_pingpong.py`](research_artifacts/scripts/download_pingpong.py). Reference paper: [arXiv:2601.17277](https://arxiv.org/abs/2601.17277). | 495 QA rows; **99 unique dialogs, 8,123 turns** (5-fold dialog-split CV, ±2-turn overlap exclusion). |
+| **SV** | Synthetic vectors | Generated for scalability experiments (no human text). | 10k–1M scale stress. |
+| **SKR** | Synthetic | Generated to match the **covariance distribution of PingPong embeddings**. | Embedding-distribution-matched eval. |
 | **ST** | Synthetic dialogs | Generated for **downstream needle retrieval** (long-conversation QA). | Needle-in-a-Haystack Hit@10. |
 
-*Notes:* PingPong is often referenced as CC BY-SA 4.0, but the license should be confirmed against the official source documentation before a final claim. PII screening here is heuristic (names/addresses/phone/account IDs); the source license does not remove privacy obligations.
+*Notes:* PingPong license (often referenced as CC BY-SA 4.0) should be confirmed against official source documentation before a final claim. PII screening is heuristic (names/addresses/phone/account IDs); source license does not remove privacy obligations.
 
-## Experimental Artifacts (public)
+## Experimental Artifacts (LSH, public)
 
-Published in [`research_artifacts/`](research_artifacts/) for reproducibility:
+Published in [`research_artifacts/`](research_artifacts/) (LSH/eval artifacts only; **no paper/figure-generation scripts**; result figures = PNG in [`docs/figures/`](docs/figures/)):
 - **Configs & results (JSON):** [`research_artifacts/benchmarks/`](research_artifacts/benchmarks/) — `experiment_results_bab4.json` (master), `stratified_needle_qa_results.json`, `real_text_experiments_results.json`, `real_baseline_results.json`, `diagnostic_report.json`.
 - **Benchmark/eval scripts:** `compile_master_results_v2.py`, `run_stratified_needle_qa.py`, `run_real_text_experiments.py`, `run_method_isolated.py`, `run_real_baselines.py`, `validate_results_integrity.py`, `diagnose_hash_quality.py`, `generate_datasets.py`, `bench_*.py`.
-- **Figure scripts:** [`generate_individual_figures.py`](research_artifacts/scripts/generate_individual_figures.py), [`generate_bab4_figures.py`](research_artifacts/scripts/generate_bab4_figures.py).
-- **Key figure:** [`research_artifacts/figures/fig4_10_downstream_needle_qa.png`](research_artifacts/figures/fig4_10_downstream_needle_qa.png) (corrected; Needle Hit@10, 95% Wilson CI). Large raw `.npy/.dat` matrices are intentionally excluded from git (see `.gitignore`).
-- **Dataset tooling:** PingPong loader + verifier in [`research_artifacts/scripts/`](research_artifacts/scripts/).
+- **Dataset tooling:** `pingpong_loader.py`, `download_pingpong.py` in [`research_artifacts/scripts/`](research_artifacts/scripts/).
+- **Result figures (PNG only):** [`docs/figures/`](docs/figures/).
 
-Local-only (not pushed): full thesis drafts, raw embedding matrices, and the private `.riset/` workspace remain on the author's machine.
+Large raw `.npy/.dat` matrices are intentionally excluded from git (see `.gitignore`). Full thesis drafts/raw private workspace (`.riset/`) remain local-only.
 
 ### 3. Experimental Setup & Reproducibility Protocol
 
@@ -182,22 +181,6 @@ Evaluated at 1,000,000 entries on an AMD Ryzen 5 PRO 4650U under a strict 2.0 GB
 | **LSH-Agent-Memory (128-bit, Pool 500)** | **15.26 MB** | **732.42 MB** | **23.82 ms** | **94.20%** | **Optimal tradeoff**: 98.9% less RAM than Flat, 59× faster than Disk Flat. |
 
 ---
-
-#### D. Downstream Episodic Memory Evaluation (Needle-in-a-Haystack QA, corrected)
-
-Needle-in-a-Haystack retrieval over 7 memory methods (B1–B7), reported as Needle Hit@10 with 95% Wilson confidence intervals (error bars). Dual-objective episodic scoring:
-
-$$S(q, m_i) = \alpha \cdot \cos(q, m_i) + (1 - \alpha) \cdot 2^{-\Delta t / h}$$
-
-Key corrected results (master-confirmed; B6 unchanged):
-
-| Method | High lexical overlap | Low lexical overlap (paraphrase) |
-| :--- | :---: | :---: |
-| **B5 — LSH-Wrapper ($\alpha=0.7$)** | **99.33%** [96.32, 99.88] | **7.33%** [4.14, 12.65] |
-| **B6 — LSH-Wrapper ($\alpha=1.0$)** | 99.33% [96.32, 99.88] | 7.33% [4.14, 12.65] |
-| **B7 — Exact cosine (upper bound)** | 100.00% [97.50, 100.00] | **9.33%** [5.64, 15.06] |
-
-*Finding (corrected):* On high-overlap needles LSH-Wrapper matches near-exact retrieval; on low-overlap paraphrase needles recall drops sharply across methods (semantic/lexical gap), so Hit@10 should be interpreted per condition with the reported Wilson CIs. See `fig4_10_downstream_needle_qa` for the full B1–B7 comparison.
 
 ---
 
