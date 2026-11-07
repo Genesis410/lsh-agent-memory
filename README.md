@@ -27,7 +27,7 @@ Local small language models (such as Phi-3, Mistral, and Llama-3 8B) running on 
    - Traditional VectorDBs (Milvus, Qdrant in Docker, or in-memory HNSW) consume 1.5 GB–4 GB of RAM solely for index graphs. `lsh-agent-memory` uses only **15.26 MB RAM for 1,000,000 interactions**, leaving 99% of system memory free for model weights and KV-cache.
 2. **Episodic Conversational Memory (Multi-Day / Multi-Turn Dialogues)**:
    - When an AI agent needs to retain personal preferences, facts, and past instructions across hundreds of thousands of conversational turns.
-   - Built-in temporal decay scoring ($S = \alpha \cdot \cos + (1-\alpha) \cdot 2^{-\Delta t / h}$) automatically prioritizes recent interactions (**99.33% Needle Hit@10 for $\Delta t \le 200$**) while letting obsolete context gracefully decay, preventing context-window clutter.
+   - Built-in temporal decay scoring ($S = \alpha \cdot \cos + (1-\alpha) \cdot 2^{-\Delta t / h}$) prioritizes recent, semantically relevant interactions while letting stale context decay, reducing prompt clutter (see corrected downstream Needle Retrieval below).
 3. **Air-Gapped, Privacy-Compliant & On-Premise Deployments**:
    - Ideal for legal, medical, or enterprise assistants adhering to strict data sovereignty regulations (e.g., Indonesia UU No. 27/2022 PDP, GDPR, HIPAA) where chat history cannot leave the local machine to third-party cloud VectorDBs (Pinecone, Weaviate Cloud).
    - Runs 100% in-process as an embedded Python library; data stays in local encrypted `.dat`/`.npy` files.
@@ -60,7 +60,7 @@ Local small language models (such as Phi-3, Mistral, and Llama-3 8B) running on 
 5. **Episodic Decay Scoring**:
    Dual-objective relevance scoring combining semantic similarity and exponential recency decay:
    $$S(q, m_i) = \alpha \cdot \cos(q, m_i) + (1 - \alpha) \cdot 2^{-\Delta t / h}$$
-   Preserves novel context ($\Delta t \le 200$) at 99.33% Needle Hit@10 retention.
+   Downstream Needle Retrieval (corrected): B5 LSH $\alpha{=}0.7$ **99.33%** high-overlap / **7.33%** low-overlap Hit@10 (95% Wilson CI).
 6. **Zero External VectorDB**:
    No Docker containers, no background daemon services, no C++ compilation toolchain required. Pure, vectorized Python.
 
@@ -161,21 +161,21 @@ Evaluated at 1,000,000 entries on an AMD Ryzen 5 PRO 4650U under a strict 2.0 GB
 
 ---
 
-#### D. Downstream Episodic Memory Evaluation (Needle-in-a-Haystack QA)
+#### D. Downstream Episodic Memory Evaluation (Needle-in-a-Haystack QA, corrected)
 
-To evaluate whether compressed episodic memory actively assists local LLMs (e.g., Llama-3 8B, Phi-3) in long-context conversational tasks, we tested Needle-in-a-Haystack retrieval across varied temporal turn distances ($\Delta t$) using dual-objective scoring:
+Needle-in-a-Haystack retrieval over 7 memory methods (B1–B7), reported as Needle Hit@10 with 95% Wilson confidence intervals (error bars). Dual-objective episodic scoring:
 
 $$S(q, m_i) = \alpha \cdot \cos(q, m_i) + (1 - \alpha) \cdot 2^{-\Delta t / h}$$
 
-With $\alpha = 0.8$ and half-life $h = 50.0$ turns:
+Key corrected results (master-confirmed; B6 unchanged):
 
-| Interaction Recency ($\Delta t$) | Pure Semantic ($\alpha=1.0$) | Episodic Decay ($\alpha=0.8$) | Downstream Agent Impact |
-| :--- | :---: | :---: | :--- |
-| **Recent Turns ($\Delta t \le 200$)** | 82.10% | **99.33% Needle Hit@10** | Immediate conversational facts retained near-perfectly. |
-| **Intermediate ($\Delta t \in [200, 1000]$)** | 81.40% | **84.50% Needle Hit@10** | Balanced relevance preventing prompt context clutter. |
-| **Distant Past ($\Delta t > 2000$)** | 80.90% | **42.10% Needle Hit@10** | Obsolete temporary context naturally decays to save token budget. |
+| Method | High lexical overlap | Low lexical overlap (paraphrase) |
+| :--- | :---: | :---: |
+| **B5 — LSH-Wrapper ($\alpha=0.7$)** | **99.33%** [96.32, 99.88] | **7.33%** [4.14, 12.65] |
+| **B6 — LSH-Wrapper ($\alpha=1.0$)** | 99.33% [96.32, 99.88] | 7.33% [4.14, 12.65] |
+| **B7 — Exact cosine (upper bound)** | 100.00% [97.50, 100.00] | **9.33%** [5.64, 15.06] |
 
-*Finding:* Episodic decay scoring successfully prioritizes fresh context while keeping retrieval latency under 25 ms, enabling local LLMs to maintain accurate conversational state within strict prompt token budgets.
+*Finding (corrected):* On high-overlap needles LSH-Wrapper matches near-exact retrieval; on low-overlap paraphrase needles recall drops sharply across methods (semantic/lexical gap), so Hit@10 should be interpreted per condition with the reported Wilson CIs. See `fig4_10_downstream_needle_qa` for the full B1–B7 comparison.
 
 ---
 
